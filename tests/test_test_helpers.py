@@ -1,11 +1,11 @@
 import unittest
 from unittest import mock
-from unittest.mock import MagicMock, call
+from unittest.mock import call
+from evdev import ecodes
 
-from evdev import uinput, ecodes
+from .helpers import send_keys, get_call_keys, evt
+
 from xkeysnail.key import Action, Combo, Key, Modifier
-
-from .helpers import send_keys, get_call_keys, reload_modules, debug_log, unittest_verbosity, evt
 
 class TestHelpers(unittest.TestCase):
 

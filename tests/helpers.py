@@ -1,9 +1,6 @@
+import unittest, os, sys, time, inspect, pprint
 from importlib import reload
-import unittest, os, sys
 from unittest.mock import call
-import time
-import inspect
-import pprint
 
 from xkeysnail.key import Action, Combo, Key, Modifier
 from evdev import ecodes
@@ -73,7 +70,7 @@ def get_call_keys(keysArr):
         if not 'a' in key:
             key['a'] = Action.PRESS
             keysArr.insert(index+1, {
-            'k': key['k'],
+                'k': key['k'],
                 'a': Action.RELEASE,
             });
 
@@ -112,7 +109,7 @@ def evt(code, value = Action.PRESS):
 #     with open(path, 'rb') as file:
 #         exec(compile(file.read(), path, 'exec'), globals())
 
-def reload_modules(fn):
+def reload_module_assoc_with(fn):
     # :/ reload the module attached to a function
     reload(sys.modules[fn.__module__]);
 
