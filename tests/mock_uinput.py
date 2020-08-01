@@ -1,6 +1,6 @@
 from unittest import mock
 with mock.patch('evdev.uinput.UInput') as mock_uinput:
-    from xkeysnail.transform import on_event, define_modmap
+    from xkeysnail.transform import *
 
 # must be imported prior to any xkeysnail.transform imports
 # so we have a chance to patch UInput first. 

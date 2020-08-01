@@ -3,7 +3,7 @@ from unittest import mock
 from unittest.mock import call
 from evdev import ecodes
 
-from .helpers import send_keys, get_call_keys, evt
+from . import helpers
 
 from xkeysnail.key import Action, Combo, Key, Modifier
 
@@ -16,7 +16,7 @@ class TestHelpers(unittest.TestCase):
         def dummy(x, y, z):
             return
 
-        keys = send_keys(dummy, [
+        keys = helpers.send_keys(dummy, [
             { 'k': Key.TAB, 'd': '' },
             { 'k': Key.ENTER, 'd': '' },
         ])
@@ -32,7 +32,7 @@ class TestHelpers(unittest.TestCase):
 
     def test_call_key_action_expansion(self):
 
-        calls = get_call_keys([
+        calls = helpers.get_call_keys([
             { 'k': Key.TAB },
             { 'k': Key.ENTER },
         ])
