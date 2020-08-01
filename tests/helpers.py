@@ -79,13 +79,21 @@ def get_call_keys(keysArr):
         callsArr.append(call().write(ecodes.EV_KEY, key['k'], key['a']))
         callsArr.append(call().syn());
 
-        # xkeysnail currently sends two RELEASE events for modifiers for some reason
-        # so we append an additional release event for each of them
-        # todo: may be better to not assume this and make explicit in each expectation
-        if not Modifier.from_key(key['k']) == None and key['a'] == Action.RELEASE:
-            callsArr.append(call().write(ecodes.EV_KEY, key['k'], Action.RELEASE))
-            callsArr.append(call().syn());
+    return callsArr
 
+def collapse_extra_release(callsArr):
+    initialLen = len(callsArr)
+    for index, calls in enumerate(reversed(callsArr)):
+        index = (initialLen-index)-1
+        name, args, kwargs = calls
+        if index > 2 and name == '().write' and args[2] == Action.RELEASE:
+            # check .syn() exists
+            lastName, lastArgs, lastKwarfs = callsArr[index-1]
+            if not lastName == '().syn': continue
+            # grab the key event 2 entries prior (we are assuming each event is followed by a .syn())
+            lastName, lastArgs, lastKwargs = callsArr[index-2]
+            if lastName == '().write' and args[1] == lastArgs[1] and lastArgs[2] == Action.RELEASE:
+                del callsArr[index:index+2]
     return callsArr
 
 def debug_log(sent, expected, received):
