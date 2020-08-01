@@ -50,34 +50,83 @@ class TestHelpers(unittest.TestCase):
 
         self.assertEqual(calls, expected)
 
-    def test_call_key_modifier_release_double(self):
+    # enter->left_shift
+    # no extra release generated
 
-        calls = get_call_keys([
-            { 'k': Key.LEFT_SHIFT, 'a': Action.PRESS },
-            { 'k': Key.LEFT_SHIFT, 'a': Action.RELEASE },
-            { 'k': Key.LEFT_SHIFT },
+    # tab->left_ctrl
+    # extra release generated
+
+    def test_collapse_extra_release_removes(self):
+
+        result = helpers.collapse_extra_release([
+            call().write(ecodes.EV_KEY, Key.TAB, Action.PRESS),
+            call().syn(),
+            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
+            call().syn(),
+            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
+            call().syn(),
         ])
 
         expected = [
-            call().write(ecodes.EV_KEY, Key.LEFT_SHIFT, Action.PRESS),
+            call().write(ecodes.EV_KEY, Key.TAB, Action.PRESS),
             call().syn(),
-            call().write(ecodes.EV_KEY, Key.LEFT_SHIFT, Action.RELEASE),
-            call().syn(),
-            call().write(ecodes.EV_KEY, Key.LEFT_SHIFT, Action.RELEASE),
-            call().syn(),
-            call().write(ecodes.EV_KEY, Key.LEFT_SHIFT, Action.PRESS),
-            call().syn(),
-            call().write(ecodes.EV_KEY, Key.LEFT_SHIFT, Action.RELEASE),
-            call().syn(),
-            call().write(ecodes.EV_KEY, Key.LEFT_SHIFT, Action.RELEASE),
+            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
             call().syn()
         ]
 
-        self.assertEqual(calls, expected)
+        self.assertEqual(result, expected)
 
-        calls = get_call_keys([
-            { 'k': Key.LEFT_SHIFT },
-            { 'k': Key.LEFT_SHIFT }
-        ])
+    def test_collapse_extra_release_syn_sensitive(self):
 
-        self.assertEqual(calls, expected)
+        expected = [
+            call().write(ecodes.EV_KEY, Key.TAB, Action.PRESS),
+            call().syn(),
+            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
+            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
+            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
+            call().syn(),
+        ]
+
+        # should be a nop
+        result = helpers.collapse_extra_release(expected);
+
+        self.assertEqual(result, expected)
+
+
+    def test_collapse_extra_release_matches_key(self):
+
+        expected = [
+            call().write(ecodes.EV_KEY, Key.TAB, Action.PRESS),
+            call().syn(),
+            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
+            call().syn(),
+            call().write(ecodes.EV_KEY, Key.LEFT_CTRL, Action.RELEASE),
+            call().syn(),
+        ]
+
+        # should be a nop
+        result = helpers.collapse_extra_release(expected)
+
+        self.assertEqual(result, expected)
+
+    def test_collapse_extra_release_respects_bounds(self):
+
+        expected = [
+            call().write(ecodes.EV_KEY, Key.TAB, Action.PRESS),
+            call().syn(),
+            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
+        ]
+
+        # should be a nop
+        result = helpers.collapse_extra_release(expected)
+
+        self.assertEqual(result, expected)
+
+        expected = [
+            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE)
+        ]
+
+        # should be a nop
+        result = helpers.collapse_extra_release(expected)
+
+        self.assertEqual(result, expected)
