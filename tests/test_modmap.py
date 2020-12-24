@@ -1,78 +1,106 @@
 import unittest
 from unittest import mock
 from unittest.mock import call
+from importlib import reload
 
-from . import mock_uinput as uinput
+from . import mock_xkeysnail as xkeymock
 from . import helpers
 
 from xkeysnail.key import Action, Combo, Key, Modifier
-from xkeysnail.transform import on_event, define_modmap, define_conditional_modmap
-
 import re
 
 class TestModmap(unittest.TestCase):
 
     def tearDown(self):
-        helpers.reload_module_assoc_with(on_event);
-        uinput.reset_mock()
+        xkeymock.reset_mock()
 
     def test_simple_modmap(self):
 
-        define_modmap({
+        xkeymock.transform.define_modmap({
             Key.TAB: Key.LEFT_CTRL
         })
 
-        keys = helpers.send_keys(on_event, [
+        keys = xkeymock.send_keys([
             { 'k': Key.TAB },
             { 'k': Key.TAB },
         ])
 
-        expected = helpers.get_call_keys([
+        expected = helpers.transform_to_uinput_calls([
             { 'k': Key.LEFT_CTRL },
             { 'k': Key.LEFT_CTRL }
         ])
 
-        received = helpers.collapse_extra_release(uinput.get_mock_calls())
+        received = helpers.reduce_calls(xkeymock.get_uinput_calls())
 
         self.assertEqual(received, expected)
 
-    @mock.patch('xkeysnail.transform.get_active_window_wm_class')
-    def test_conditional_modmap(self, get_wm_class):
+    def test_conditional_modmap(self):
 
-        define_conditional_modmap(re.compile(r'test_window_class'), {
+        xkeymock.set_wm_class('test_window_class')
+
+        xkeymock.transform.define_conditional_modmap(re.compile(r'test_window_class'), {
            Key.ENTER: Key.LEFT_CTRL,
         })
 
         # test with correct wm_class
 
-        get_wm_class.return_value = 'test_window_class'
-
-        keys = helpers.send_keys(on_event, [
+        keys = xkeymock.send_keys([
             { 'k': Key.ENTER },
         ])
 
-        expected = helpers.get_call_keys([
+        expected = helpers.transform_to_uinput_calls([
             { 'k': Key.LEFT_CTRL },
         ])
 
-        received = helpers.collapse_extra_release(uinput.get_mock_calls())
+        received = helpers.reduce_calls(xkeymock.get_uinput_calls())
 
         self.assertEqual(received, expected)
 
         # test without correct wm_class
 
-        uinput.reset_mock()
-        get_wm_class.return_value = ''
+        xkeymock.reset_uinput_calls()
 
-        keys = helpers.send_keys(on_event, [
+        xkeymock.set_wm_class('')
+
+        keys = xkeymock.send_keys([
             { 'k': Key.ENTER },
         ])
 
-        expected = helpers.get_call_keys([
+        expected = helpers.transform_to_uinput_calls([
             { 'k': Key.ENTER },
         ])
 
-        received = helpers.collapse_extra_release(uinput.get_mock_calls())
+        received = helpers.reduce_calls(xkeymock.get_uinput_calls())
+
+        self.assertEqual(received, expected)
+
+    def test_conditional_modmap_device(self):
+
+        xkeymock.transform.define_conditional_modmap(lambda wm_class, device_name: device_name.startswith('my_device'), {
+           Key.ENTER: Key.LEFT_CTRL
+        })
+
+        keys = xkeymock.send_keys([
+            { 'k': Key.ENTER, 'd': 'my_device' },
+        ])
+
+        expected = helpers.transform_to_uinput_calls([
+            { 'k': Key.LEFT_CTRL },
+        ])
+
+        received = helpers.reduce_calls(xkeymock.get_uinput_calls())
+
+        xkeymock.reset_uinput_calls();
+
+        keys = xkeymock.send_keys([
+            { 'k': Key.ENTER, 'd': 'other_device' },
+        ])
+
+        expected = helpers.transform_to_uinput_calls([
+            { 'k': Key.ENTER },
+        ])
+
+        received = helpers.reduce_calls(xkeymock.get_uinput_calls())
 
         self.assertEqual(received, expected)
 

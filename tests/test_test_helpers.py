@@ -32,7 +32,7 @@ class TestHelpers(unittest.TestCase):
 
     def test_call_key_action_expansion(self):
 
-        calls = helpers.get_call_keys([
+        calls = helpers.transform_to_uinput_calls([
             { 'k': Key.TAB },
             { 'k': Key.ENTER },
         ])
@@ -50,15 +50,9 @@ class TestHelpers(unittest.TestCase):
 
         self.assertEqual(calls, expected)
 
-    # enter->left_shift
-    # no extra release generated
-
-    # tab->left_ctrl
-    # extra release generated
-
     def test_collapse_extra_release_removes(self):
 
-        result = helpers.collapse_extra_release([
+        result = helpers.reduce_calls([
             call().write(ecodes.EV_KEY, Key.TAB, Action.PRESS),
             call().syn(),
             call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
@@ -76,57 +70,30 @@ class TestHelpers(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    def test_collapse_extra_release_syn_sensitive(self):
+    def test_reduce_multiple_redundant_calls(self):
+
+        callsArr = [
+            call().write(ecodes.EV_KEY, Key.TAB, Action.PRESS),
+            call().syn(),
+            call().write(ecodes.EV_KEY, Key.TAB, Action.PRESS),
+            call().syn(),
+            call().write(ecodes.EV_KEY, Key.LEFT_SHIFT, Action.PRESS),
+            call().syn(),
+            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
+            call().syn(),
+            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
+            call().syn(),
+        ];
+
+        result = helpers.reduce_calls(callsArr)
 
         expected = [
             call().write(ecodes.EV_KEY, Key.TAB, Action.PRESS),
             call().syn(),
-            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
-            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
+            call().write(ecodes.EV_KEY, Key.LEFT_SHIFT, Action.PRESS),
+            call().syn(),
             call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
             call().syn(),
         ]
-
-        # should be a nop
-        result = helpers.collapse_extra_release(expected);
-
-        self.assertEqual(result, expected)
-
-
-    def test_collapse_extra_release_matches_key(self):
-
-        expected = [
-            call().write(ecodes.EV_KEY, Key.TAB, Action.PRESS),
-            call().syn(),
-            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
-            call().syn(),
-            call().write(ecodes.EV_KEY, Key.LEFT_CTRL, Action.RELEASE),
-            call().syn(),
-        ]
-
-        # should be a nop
-        result = helpers.collapse_extra_release(expected)
-
-        self.assertEqual(result, expected)
-
-    def test_collapse_extra_release_respects_bounds(self):
-
-        expected = [
-            call().write(ecodes.EV_KEY, Key.TAB, Action.PRESS),
-            call().syn(),
-            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE),
-        ]
-
-        # should be a nop
-        result = helpers.collapse_extra_release(expected)
-
-        self.assertEqual(result, expected)
-
-        expected = [
-            call().write(ecodes.EV_KEY, Key.TAB, Action.RELEASE)
-        ]
-
-        # should be a nop
-        result = helpers.collapse_extra_release(expected)
 
         self.assertEqual(result, expected)

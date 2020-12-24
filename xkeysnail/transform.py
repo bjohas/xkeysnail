@@ -14,7 +14,8 @@ import Xlib.display
 
 _release_combo = False
 
-def get_active_window_wm_class(display=Xlib.display.Display()):
+def get_active_window_wm_class(display=None):
+    display=Xlib.display.Display()
     """Get active window's WM_CLASS"""
     current_window = display.get_input_focus().focus
     pair = get_class_name(current_window)
@@ -344,7 +345,7 @@ def multipurpose_handler(multipurpose_map, key, action):
         we have not yet sent it's modifier translation we do so."""
         for k, [ _, mod_key, state ] in multipurpose_map.items():
             if k in _pressed_keys and mod_key not in _pressed_modifier_keys:
-                on_key(mod_key, Action.PRESS)
+                on_key(mod_key, Action.PRESS, quiet=True)
 
     # we need to register the last key presses so we know if a multipurpose key
     # was a single press and release
@@ -362,11 +363,11 @@ def multipurpose_handler(multipurpose_map, key, action):
             # it is a single press and release
             if key_was_last_press and _last_key_time + _timeout > time():
                 maybe_press_modifiers(multipurpose_map)  # maybe other multipurpose keys are down
-                on_key(single_key, Action.PRESS)
-                on_key(single_key, Action.RELEASE)
+                on_key(single_key, Action.PRESS, quiet=True)
+                on_key(single_key, Action.RELEASE, quiet=True)
             # it is the modifier in a combo
             elif mod_is_down:
-                on_key(mod_key, Action.RELEASE)
+                on_key(mod_key, Action.RELEASE, quiet=True)
         elif action == Action.PRESS and not key_is_down:
             _last_key_time = time()
     # if key is not a multipurpose or mod key we want eventual modifiers down
@@ -412,7 +413,6 @@ def on_event(event, device_name, quiet):
         multipurpose_handler(active_multipurpose_map, key, action)
         if key in active_multipurpose_map:
             return
-
     on_key(key, action, wm_class=wm_class, quiet=quiet)
     update_pressed_keys(key, action)
 
@@ -452,7 +452,8 @@ def transform_key(key, action, wm_class=None, quiet=False):
     combo = Combo(get_pressed_modifiers(), key)
 
     if _mode_maps is escape_next_key:
-        print("Escape key: {}".format(combo))
+        if not quiet:
+            print("Escape key: {}".format(combo))
         send_key_action(key, action)
         _mode_maps = None
         return
