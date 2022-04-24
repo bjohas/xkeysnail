@@ -135,7 +135,7 @@ def K(exp):
     import re
     modifier_strs = []
     while True:
-        m = re.match(r"\A(LC|LCtrl|RC|RCtrl|C|Ctrl|LM|LAlt|RM|RAlt|M|Alt|LShift|RShift|Shift|LSuper|LWin|RSuper|RWin|Super|Win)-", exp)
+        m = re.match(r"\A(LC|LCtrl|RC|RCtrl|C|Ctrl|LM|LAlt|RM|RAlt|M|Alt|LShift|RShift|Shift|LSuper|LWin|RSuper|RWin|Super|Win|LH|LHyp|RH|RHyp|Hyp)-", exp)
         if m is None:
             break
         modifier = m.group(1)
@@ -170,6 +170,12 @@ def create_modifiers_from_strings(modifier_strs):
         elif modifier_str == 'Super' or modifier_str == 'Win':
             modifiers.add(Modifier.SUPER)
             pass
+        elif modifier_str == 'LHyper' or modifier_str == 'LHyp':
+            modifiers.add(Modifier.L_HYPER)
+        elif modifier_str == 'RHyper' or modifier_str == 'RHyp':
+            modifiers.add(Modifier.R_HYPER)
+        elif modifier_str == 'Hyper' or modifier_str == 'Hyp':
+            modifiers.add(Modifier.HYPER)
         elif modifier_str == 'LShift':
             modifiers.add(Modifier.L_SHIFT)
         elif modifier_str == 'RShift':

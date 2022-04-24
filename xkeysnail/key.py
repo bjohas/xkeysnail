@@ -267,6 +267,12 @@ class Key(IntEnum):
 
     MICMUTE = 248
 
+# Introduce Hyper Key
+    LEFT_HYPER = 249
+    RIGHT_HYPER = 250
+
+    # We can go up to OxFF = 256
+    
     BTN_MISC = 0x100
     BTN_0    = 0x100
     BTN_1    = 0x101
@@ -742,7 +748,8 @@ class Modifier(Enum):
     L_CONTROL, R_CONTROL, CONTROL, \
         L_ALT, R_ALT, ALT, \
         L_SHIFT, R_SHIFT, SHIFT, \
-        L_SUPER, R_SUPER, SUPER = range(12)
+        L_SUPER, R_SUPER, SUPER, \
+        L_HYPER, R_HYPER, HYPER = range(15)
 
     @classmethod
     def _get_modifier_map(cls):
@@ -758,7 +765,10 @@ class Modifier(Enum):
             cls.SHIFT: {Key.LEFT_SHIFT, Key.RIGHT_SHIFT},
             cls.L_SUPER: {Key.LEFT_META},
             cls.R_SUPER: {Key.RIGHT_META},
-            cls.SUPER: {Key.LEFT_META, Key.RIGHT_META}
+            cls.SUPER: {Key.LEFT_META, Key.RIGHT_META},
+            cls.L_HYPER: {Key.LEFT_HYPER},
+            cls.R_HYPER: {Key.RIGHT_HYPER},
+            cls.HYPER: {Key.LEFT_HYPER, Key.RIGHT_HYPER}
         }
 
     def __str__(self):
@@ -774,6 +784,9 @@ class Modifier(Enum):
         if self.value == self.L_SUPER.value: return "LSuper"
         if self.value == self.R_SUPER.value: return "RSuper"
         if self.value == self.SUPER.value: return "Super"
+        if self.value == self.L_HYPER.value: return "LHyper"
+        if self.value == self.R_HYPER.value: return "RHyper"
+        if self.value == self.HYPER.value: return "Hyper"
         return None
 
     def is_specified(self):
@@ -784,7 +797,9 @@ class Modifier(Enum):
                 self.value == self.L_SHIFT.value or \
                 self.value == self.R_SHIFT.value or \
                 self.value == self.L_SUPER.value or \
-                self.value == self.R_SUPER.value
+                self.value == self.R_SUPER.value or \
+                self.value == self.L_HYPER.value or \
+                self.value == self.R_HYPER.value
 
     def to_left(self):
         if self.value == self.CONTROL.value:
@@ -795,6 +810,8 @@ class Modifier(Enum):
             return self.L_SHIFT
         elif self.value == self.SUPER.value:
             return self.L_SUPER
+        elif self.value == self.HYPER.value:
+            return self.L_HYPER
 
     def to_right(self):
         if self.value == self.CONTROL.value:
@@ -805,6 +822,8 @@ class Modifier(Enum):
             return self.R_SHIFT
         elif self.value == self.SUPER.value:
             return self.R_SUPER
+        elif self.value == self.HYPER.value:
+            return self.R_HYPER
 
     def get_keys(self):
         return self._get_modifier_map()[self]
